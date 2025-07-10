@@ -1,0 +1,108 @@
+# -------------------
+
+# Python & Backend
+
+# -------------------
+
+**pycache**/
+\*.py\[cod]
+\*.pyo
+\*.pyd
+
+# Uvicorn reload temp files
+
+*.reload.*.py
+
+# WhisperX & Pyannote caches
+
+whisperx\_cache/
+pyannote\_cache/
+
+# Environment & virtualenvs
+
+.env
+.venv/
+venv/
+
+# Logs
+
+\*.log
+
+# Jupyter checkpoints
+
+.ipynb\_checkpoints/
+
+# -------------------
+
+# Frontend (Node.js)
+
+# -------------------
+
+subtitlerFrontend/node\_modules/
+subtitlerFrontend/dist/
+npm-debug.log\*
+yarn-error.log\*
+
+# Dependency lock files
+
+package-lock.json
+yarn.lock
+
+# -------------------
+
+# Debian packages
+
+# -------------------
+
+*.deb
+*.deb.*
+subtitlerBackend/*.deb\*
+
+# -------------------
+
+# Editor & OS
+
+# -------------------
+
+# VSCode
+
+.vscode/
+
+# JetBrains
+
+.idea/
+
+# macOS
+
+.DS\_Store
+
+# Windows
+
+Thumbs.db
+
+# -------------------
+
+# Misc
+
+# -------------------
+
+\*.tmp
+
+# Build artifacts
+
+build/
+dist/
+
+# Coverage reports
+
+coverage/
+
+# Docker files
+
+docker-compose.override.yml
+.env.local
+
+# Secrets
+
+\*.key
+\*.pem
