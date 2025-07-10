@@ -14,9 +14,7 @@ const downloadSrt = (filename: string, segments: Segment[], options: any) => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.floor(totalSeconds % 60);
     const milliseconds = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
-
     const pad = (num: number, size: number = 2) => num.toString().padStart(size, '0');
-
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)},${pad(milliseconds, 3)}`;
   };
 
@@ -26,12 +24,10 @@ const downloadSrt = (filename: string, segments: Segment[], options: any) => {
   segments.forEach(segment => {
     const start = formatSrtTime(segment.start);
     const end = formatSrtTime(segment.end);
-
     let text = segment.text.trim();
     if (options.showSpeakers && segment.speaker) {
       text = `[${segment.speaker}]: ${text}`;
     }
-
     let lines: string[] = [text];
     if (options.autoLineBreak) {
       lines = [];
@@ -50,7 +46,6 @@ const downloadSrt = (filename: string, segments: Segment[], options: any) => {
         lines = lines.slice(0, options.maxLines);
       }
     }
-
     srtContent += `${counter++}\n`;
     srtContent += `${start} --> ${end}\n`;
     srtContent += `${lines.join('\n')}\n\n`;
@@ -83,6 +78,7 @@ function App() {
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const animationFrameId = useRef<number>();
 
   const uniqueSpeakers = useMemo(
     () => Array.from(new Set(segments.map(s => s.speaker).filter((s): s is string => typeof s === 'string' && !!s))).sort(),
@@ -100,34 +96,37 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'SELECT') {
-        return;
-      }
-
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'SELECT') return;
       e.preventDefault();
-
       if (e.code === 'Space') {
         videoRef.current?.paused ? videoRef.current?.play() : videoRef.current?.pause();
       }
-
       const isModKey = e.metaKey || e.ctrlKey;
-
       if (isModKey && activeSegmentIndex !== null) {
-        if (e.key === 'j') {
-          handleMergeDown(activeSegmentIndex);
-        }
-        if (e.key === 'k') {
-          const segmentText = segments[activeSegmentIndex].text;
-          handleSplit(activeSegmentIndex, Math.floor(segmentText.length / 2));
-        }
+        if (e.key === 'j') handleMergeDown(activeSegmentIndex);
+        if (e.key === 'k') handleSplit(activeSegmentIndex, Math.floor(segments[activeSegmentIndex].text.length / 2));
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeSegmentIndex, segments]);
+
+  const animationLoop = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+    animationFrameId.current = requestAnimationFrame(animationLoop);
+  };
+
+  const handlePlay = () => {
+    animationFrameId.current = requestAnimationFrame(animationLoop);
+  };
+
+  const handlePause = () => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+  };
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,13 +170,10 @@ function App() {
       const newMap = { ...prevMap };
       newMap[oldName] = newName;
       for (const key in newMap) {
-        if (newMap[key] === oldName) {
-          newMap[key] = newName;
-        }
+        if (newMap[key] === oldName) newMap[key] = newName;
       }
       return newMap;
     });
-
     setSegments(prevSegments =>
       prevSegments.map(seg =>
         seg.speaker === oldName ? { ...seg, speaker: newName } : seg
@@ -190,42 +186,27 @@ function App() {
     const segmentA = segments[index];
     const segmentB = segments[index + 1];
     if (!segmentA || !segmentB) return;
-
     const mergedSegment: Segment = {
       start: segmentA.start,
       end: segmentB.end,
       text: `${segmentA.text.trim()} ${segmentB.text.trim()}`,
       speaker: segmentA.speaker,
     };
-
-    setSegments([
-      ...segments.slice(0, index),
-      mergedSegment,
-      ...segments.slice(index + 2),
-    ]);
+    setSegments([...segments.slice(0, index), mergedSegment, ...segments.slice(index + 2)]);
   };
 
   const handleSplit = (index: number, cursorPosition: number) => {
     const segment = segments[index];
     if (!segment || cursorPosition === 0 || cursorPosition === segment.text.length) return;
-
     const textA = segment.text.substring(0, cursorPosition).trim();
     const textB = segment.text.substring(cursorPosition).trim();
     if (!textA || !textB) return;
-
     const duration = segment.end - segment.start;
     const splitRatio = cursorPosition / segment.text.length;
     const splitTime = segment.start + (duration * splitRatio);
-
     const segmentA: Segment = { ...segment, end: splitTime, text: textA };
     const segmentB: Segment = { ...segment, start: splitTime, text: textB };
-
-    setSegments([
-      ...segments.slice(0, index),
-      segmentA,
-      segmentB,
-      ...segments.slice(index + 1),
-    ]);
+    setSegments([...segments.slice(0, index), segmentA, segmentB, ...segments.slice(index + 1)]);
   };
 
   const handleResync = async () => {
@@ -274,11 +255,8 @@ function App() {
   const handleTimeUpdate = (time: number) => {
     setCurrentTime(time);
     setSeekTo(null);
-
     const activeIndex = segments.findIndex(s => time >= s.start && time <= s.end);
-    if (activeIndex !== -1) {
-      setActiveSegmentIndex(activeIndex);
-    }
+    if (activeIndex !== -1) setActiveSegmentIndex(activeIndex);
   };
 
   const handleSeek = (time: number) => {
@@ -362,14 +340,19 @@ function App() {
         </div>
 
         <div className="right-panel">
-          <VideoPlayer videoRef={videoRef} src={videoSrc} onTimeUpdate={handleTimeUpdate} seekTo={seekTo} />
-
+          <VideoPlayer
+            videoRef={videoRef}
+            src={videoSrc}
+            onTimeUpdate={handleTimeUpdate}
+            seekTo={seekTo}
+            onPlay={handlePlay}
+            onPause={handlePause}
+          />
           {videoSrc && (
             <div className="waveform-container">
               <AudioWaveform mediaElement={videoRef.current} onSeek={handleSeek} />
             </div>
           )}
-
           <div className="subtitle-editor-header">
             <h3>Transcript</h3>
           </div>
@@ -381,6 +364,7 @@ function App() {
                   key={`${index}-${segment.start}-${segment.end}`}
                   segment={segment}
                   isActive={isActive}
+                  currentTime={currentTime}
                   onSeek={() => handleSeek(segment.start)}
                   onTextChange={(newText) => handleSegmentTextChange(index, newText)}
                   uniqueSpeakers={uniqueSpeakers}

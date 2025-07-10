@@ -9,20 +9,29 @@ import tempfile
 import datetime
 from pydantic import BaseModel
 from pyannote.core import Segment as PyannoteSegment
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 
 load_dotenv()
 
 # --- Pydantic Models for Data Validation (New) ---
+class Word(BaseModel):
+    start: Optional[float] = None
+    end: Optional[float] = None
+    word: str
+    speaker: Optional[str] = None
+    score: Optional[Any] = None
+
 class Segment(BaseModel):
     start: float
     end: float
     text: str
     speaker: Optional[str] = None
+    words: Optional[List[Word]] = None
 
 class RenameSpeakersRequest(BaseModel):
-    segments: List[Segment]
-    speaker_map: Dict[str, str]
+  segments: List[Segment]
+  speaker_map: Dict[str, str]
+
 
 # --- Application Setup ---
 app = FastAPI()

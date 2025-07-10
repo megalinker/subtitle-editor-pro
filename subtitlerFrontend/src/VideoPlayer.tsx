@@ -1,32 +1,34 @@
-import { useRef, useEffect, RefObject } from 'react';
+import { useEffect, RefObject } from 'react';
 
 interface VideoPlayerProps {
     videoRef: RefObject<HTMLVideoElement>;
     src: string;
     onTimeUpdate: (time: number) => void;
     seekTo: number | null;
+    onPlay: () => void;
+    onPause: () => void;
 }
 
-export const VideoPlayer = ({ videoRef, src, onTimeUpdate, seekTo }: VideoPlayerProps) => {
-    // Use the passed-in ref
-    const internalRef = useRef<HTMLVideoElement>(null);
-    const resolvedRef = videoRef || internalRef;
+export const VideoPlayer = ({ videoRef, src, onTimeUpdate, seekTo, onPlay, onPause }: VideoPlayerProps) => {
 
     useEffect(() => {
-        if (resolvedRef.current && seekTo !== null) {
-            resolvedRef.current.currentTime = seekTo;
+        if (videoRef.current && seekTo !== null) {
+            videoRef.current.currentTime = seekTo;
         }
-    }, [seekTo, resolvedRef]);
+    }, [seekTo, videoRef]);
 
     return (
         <div className="video-placeholder">
             {src ? (
                 <video
-                    ref={resolvedRef}
+                    ref={videoRef}
                     src={src}
                     controls
                     width="100%"
-                    onTimeUpdate={() => onTimeUpdate(resolvedRef.current?.currentTime || 0)}
+                    onTimeUpdate={() => onTimeUpdate(videoRef.current?.currentTime || 0)}
+                    onPlay={onPlay}
+                    onPause={onPause}
+                    onEnded={onPause}
                 />
             ) : (
                 "Your video will appear here"

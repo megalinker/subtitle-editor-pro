@@ -2,15 +2,15 @@
 
 :root {
     --font-family: 'Poppins', sans-serif;
-    --background: #1a1c20;
-    --surface-1: #24262b;
-    --surface-2: #2f3238;
-    --text-primary: #f0f0f0;
-    --text-secondary: #a0a0a0;
-    --primary: #4a90e2;
-    --primary-hover: #5aa1f2;
+    --background: #121212;
+    --surface-1: #1E1E1E;
+    --surface-2: #2C2C2C;
+    --text-primary: #E0E0E0;
+    --text-secondary: #9E9E9E;
+    --primary: #3391FF;
+    --primary-hover: #5CADFF;
     --danger: #e24a4a;
-    --border-color: #3f434a;
+    --border-color: #383838;
     --border-radius: 8px;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -339,6 +339,37 @@ hr {
 
 .segment-line__controls button:hover svg {
     stroke: var(--primary-hover);
+}
+
+.segment-line__text-editor {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.segment-line__readonly-text {
+    padding: 8px;
+    margin: 0;
+    white-space: normal;
+    cursor: text;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.segment-line__readonly-text .word {
+    display: inline-block;
+    margin-right: 0.25em;
+    transition: background-color 0.1s ease-in-out;
+}
+
+.segment-line__readonly-text .word.highlighted {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 3px;
+}
+
+.segment-line.active .word.highlighted {
+    background-color: white;
+    color: #121212;
 }
 
 .waveform-container {
