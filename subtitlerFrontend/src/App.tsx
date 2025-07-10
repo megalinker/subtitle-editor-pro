@@ -9,11 +9,21 @@ import './App.css';
 type Status = 'idle' | 'transcribing' | 'resyncing' | 'renaming' | 'refining';
 
 const downloadSrt = (filename: string, segments: Segment[], options: any) => {
+  const formatSrtTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const milliseconds = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
+
+    const pad = (num: number, size: number = 2) => num.toString().padStart(size, '0');
+
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)},${pad(milliseconds, 3)}`;
+  };
+
   let srtContent = "";
   let counter = 1;
 
   segments.forEach(segment => {
-    const formatSrtTime = (seconds: number) => new Date(seconds * 1000).toISOString().substr(11, 12).replace('.', ',');
     const start = formatSrtTime(segment.start);
     const end = formatSrtTime(segment.end);
 
