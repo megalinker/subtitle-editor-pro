@@ -3,7 +3,7 @@ import { Segment } from './types';
 import { transcribeFile, resyncTranscript, renameSpeakers, refineDiarization } from './api';
 import { SegmentLine } from './SegmentLine';
 import { VideoPlayer } from './VideoPlayer';
-import { AudioWaveform } from './AudioWaveform'; // NEW IMPORT
+import { AudioWaveform } from './AudioWaveform';
 import './App.css';
 
 type Status = 'idle' | 'transcribing' | 'resyncing' | 'renaming' | 'refining';
@@ -156,6 +156,25 @@ function App() {
     setSegments(updatedSegments);
   };
 
+  const handleRenameSpeakerInPlace = (oldName: string, newName: string) => {
+    setSpeakerMap(prevMap => {
+      const newMap = { ...prevMap };
+      newMap[oldName] = newName;
+      for (const key in newMap) {
+        if (newMap[key] === oldName) {
+          newMap[key] = newName;
+        }
+      }
+      return newMap;
+    });
+
+    setSegments(prevSegments =>
+      prevSegments.map(seg =>
+        seg.speaker === oldName ? { ...seg, speaker: newName } : seg
+      )
+    );
+  };
+
   const handleMergeDown = (index: number) => {
     if (index >= segments.length - 1) return;
     const segmentA = segments[index];
@@ -255,7 +274,6 @@ function App() {
   const handleSeek = (time: number) => {
     setSeekTo(time);
   };
-
 
   return (
     <div className="app-container">
@@ -357,6 +375,7 @@ function App() {
                   onTextChange={(newText) => handleSegmentTextChange(index, newText)}
                   uniqueSpeakers={uniqueSpeakers}
                   onSpeakerChange={(newSpeaker) => handleSegmentSpeakerChange(index, newSpeaker)}
+                  onRenameSpeaker={handleRenameSpeakerInPlace}
                   onSplit={(cursor) => handleSplit(index, cursor)}
                   onMergeDown={() => handleMergeDown(index)}
                   isLastSegment={index === segments.length - 1}
