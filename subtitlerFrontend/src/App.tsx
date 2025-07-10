@@ -3,6 +3,7 @@ import { Segment } from './types';
 import { transcribeFile, resyncTranscript, renameSpeakers, refineDiarization } from './api';
 import { SegmentLine } from './SegmentLine';
 import { VideoPlayer } from './VideoPlayer';
+import { AudioWaveform } from './AudioWaveform'; // NEW IMPORT
 import './App.css';
 
 type Status = 'idle' | 'transcribing' | 'resyncing' | 'renaming' | 'refining';
@@ -87,34 +88,26 @@ function App() {
     setVideoSrc('');
   }, [file]);
 
-  // --- NEW: Keyboard Shortcuts Handler ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT') {
-        // Don't trigger shortcuts if user is typing in an input field
-        // except for specific text editing shortcuts if we add them later
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'SELECT') {
         return;
       }
 
       e.preventDefault();
 
-      // Play/Pause video with Spacebar
       if (e.code === 'Space') {
         videoRef.current?.paused ? videoRef.current?.play() : videoRef.current?.pause();
       }
 
-      const isModKey = e.metaKey || e.ctrlKey; // metaKey for Cmd on Mac
+      const isModKey = e.metaKey || e.ctrlKey;
 
       if (isModKey && activeSegmentIndex !== null) {
-        // Merge segment down with Ctrl/Cmd + J
         if (e.key === 'j') {
           handleMergeDown(activeSegmentIndex);
         }
-        // Split segment with Ctrl/Cmd + K
         if (e.key === 'k') {
           const segmentText = segments[activeSegmentIndex].text;
-          // As a default, split in the middle. A more advanced version
-          // could use the cursor position from the input field.
           handleSplit(activeSegmentIndex, Math.floor(segmentText.length / 2));
         }
       }
@@ -124,7 +117,7 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeSegmentIndex, segments]); // Rerun if active segment changes
+  }, [activeSegmentIndex, segments]);
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +157,7 @@ function App() {
   };
 
   const handleMergeDown = (index: number) => {
-    if (index >= segments.length - 1) return; // Cannot merge the last segment down
+    if (index >= segments.length - 1) return;
     const segmentA = segments[index];
     const segmentB = segments[index + 1];
     if (!segmentA || !segmentB) return;
@@ -253,7 +246,6 @@ function App() {
     setCurrentTime(time);
     setSeekTo(null);
 
-    // Set active segment for keyboard shortcuts
     const activeIndex = segments.findIndex(s => time >= s.start && time <= s.end);
     if (activeIndex !== -1) {
       setActiveSegmentIndex(activeIndex);
@@ -263,6 +255,7 @@ function App() {
   const handleSeek = (time: number) => {
     setSeekTo(time);
   };
+
 
   return (
     <div className="app-container">
@@ -342,6 +335,12 @@ function App() {
 
         <div className="right-panel">
           <VideoPlayer videoRef={videoRef} src={videoSrc} onTimeUpdate={handleTimeUpdate} seekTo={seekTo} />
+
+          {videoSrc && (
+            <div className="waveform-container">
+              <AudioWaveform mediaElement={videoRef.current} onSeek={handleSeek} />
+            </div>
+          )}
 
           <div className="subtitle-editor-header">
             <h3>Transcript</h3>

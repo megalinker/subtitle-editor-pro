@@ -341,6 +341,12 @@ hr {
     stroke: var(--primary-hover);
 }
 
+.waveform-container {
+    background-color: var(--surface-2);
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
 @media (max-width: 1024px) {
     .app-main {
         grid-template-columns: 1fr;
