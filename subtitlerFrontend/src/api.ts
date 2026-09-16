@@ -1,18 +1,23 @@
 import axios from 'axios';
 
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8000`;
+};
+
 const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: getApiBaseUrl(),
 });
 
 export const transcribeFile = (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  return apiClient.post('/transcribe', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  return apiClient.post('/transcribe', formData);
 };
 
 export const resyncTranscript = (file: File, transcript: string) => {
@@ -20,11 +25,7 @@ export const resyncTranscript = (file: File, transcript: string) => {
   formData.append('file', file);
   formData.append('transcript', transcript);
 
-  return apiClient.post('/resync', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  return apiClient.post('/resync', formData);
 };
 
 export const renameSpeakers = (segments: any[], speakerMap: Record<string, string>) => {
@@ -39,9 +40,5 @@ export const refineDiarization = (file: File, segments: any[]) => {
   formData.append('file', file);
   formData.append('segments_json', JSON.stringify(segments));
 
-  return apiClient.post('/refine_diarization', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  return apiClient.post('/refine_diarization', formData);
 };

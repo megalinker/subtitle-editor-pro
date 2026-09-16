@@ -12,3 +12,19 @@ export interface Segment {
   speaker?: string;
   words?: Word[];
 }
+
+export interface FileSignature {
+  name: string;
+  size: number;
+  lastModified: number;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  fileSignature: FileSignature;
+  segments: Segment[];
+  speakerMap: Record<string, string>;
+  createdAt: number;
+  updatedAt: number;
+}
